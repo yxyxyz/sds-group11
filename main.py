@@ -116,9 +116,11 @@ def main():
                                      history_len=history_len,
                                      forecast_len=forecast_len,
                                      window_sizes=[6, 8, 12]).to(device)
+            model_path = os.path.join('results', 'forecast_model.pth')
             model, _, _ = train_dl_model(
                 model, train_loader, val_loader, device,
-                num_epochs=500, early_stop_patience=30, verbose=False)
+                num_epochs=500, early_stop_patience=30, verbose=False,
+                model_path=model_path)
             preds, targets = predict_dl(model, test_loader, device)
 
         elapsed = time.time() - t0

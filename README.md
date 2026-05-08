@@ -46,7 +46,7 @@ The pipeline compares 5 architectures:
 | 2 | **SimpleMLP**          | Multi-layer perceptron on flattened sequences  |
 | 3 | **SimpleLSTM**         | 2-layer LSTM with Huber loss                   |
 | 4 | **CNN-BiLSTM-Attn**    | 1D CNN + Bidirectional LSTM + attention        |
-| 5 | **ForecastModel_v2**   | Multi-scale STFT Imitation Network (SINCA)     |
+| 5 | **ForecastModel**   | Multi-scale STFT Imitation Network (SINCA)     |
 
 Metric: MSE, MAE, RMSE, wMAPE, sMAPE, R².
 
@@ -71,5 +71,5 @@ Results are saved to `results/metrics.csv` (model comparison) and `results/predi
 - Missing value imputation (linear interpolation → 24h shift-fill → forward/backward fill)
 - Lag features: Price (24/48/72/168 h), Generation and Load (24/168 h)
 - Sinusoidal day-of-week time features
-- Chronological 70/15/15 train/val/test split
+- Chronological 70/20/10 train/val/test split
 - Sliding windows: 24 h input → 72 h forecast horizon
