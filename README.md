@@ -77,9 +77,8 @@ Run `sds.ipynb` to load the pretrained model and fine-tune on `Full_Dataset_Upda
 
 ## Key Preprocessing Steps
 
-- 5-sigma outlier clipping on all features
+- 3-sigma outlier clipping on all features
 - Missing value imputation (linear interpolation → 24h shift-fill → forward/backward fill)
-- Lag features: Price (24/48/72/168 h), Generation and Load (24/168 h)
-- Sinusoidal day-of-week time features
+- Lag features: Price (24/48/72 h), Generation and Load (24/72 h)
 - Chronological 70/20/10 train/val/test split
 - Sliding windows: 24 h input → 72 h forecast horizon
