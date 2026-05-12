@@ -5,6 +5,8 @@ import numpy as np
 import torch
 import pandas as pd
 
+os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+
 from data_processing import (
     load_and_preprocess, split_data, create_sequences, create_dataloaders,
 )
@@ -25,6 +27,8 @@ def set_seed(seed=42):
     if torch.cuda.is_available():
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+        torch.backends.cuda.matmul.allow_tf32 = False
+        torch.backends.cudnn.allow_tf32 = False
     if hasattr(torch, 'mps') and torch.backends.mps.is_available():
         torch.mps.manual_seed(seed)
 
@@ -69,15 +73,16 @@ def main():
     test_loader = create_dataloaders(X_test_seq, y_test_seq, batch_size, shuffle=False)
 
     models_to_run = [
-        ('LEAR', None),
-        ('SimpleMLP', None),
-        ('SimpleLSTM', None),
-        ('CNN-BiLSTM-Attn', None),
+        # ('LEAR', None),
+        # ('SimpleMLP', None),
+        # ('SimpleLSTM', None),
+        # ('CNN-BiLSTM-Attn', None),
         ('ForecastModel', 'predictions.csv'),
     ]
     results = []
 
     for model_name, csv_out in models_to_run:
+        set_seed(42)
         print(f"\n--- {model_name} ---")
         t0 = time.time()
 
@@ -92,7 +97,7 @@ def main():
                               forecast_len=forecast_len).to(device)
             model, _, _ = train_dl_model(
                 model, train_loader, val_loader, device,
-                num_epochs=500, early_stop_patience=30, verbose=False)
+                verbose=False)
             preds, targets = predict_dl(model, test_loader, device)
         elif model_name == 'SimpleLSTM':
             model = SimpleLSTM(input_size=n_features, hidden_size=64,
@@ -100,7 +105,7 @@ def main():
                                dropout=0.3).to(device)
             model, _, _ = train_dl_model(
                 model, train_loader, val_loader, device,
-                num_epochs=500, early_stop_patience=30, verbose=False)
+                verbose=False)
             preds, targets = predict_dl(model, test_loader, device)
         elif model_name == 'CNN-BiLSTM-Attn':
             model = CNNLSTMAttention(input_size=n_features, cnn_channels=32,
@@ -109,7 +114,7 @@ def main():
                                      dropout=0.3).to(device)
             model, _, _ = train_dl_model(
                 model, train_loader, val_loader, device,
-                num_epochs=500, early_stop_patience=30, verbose=False)
+                verbose=False)
             preds, targets = predict_dl(model, test_loader, device)
         elif model_name == 'ForecastModel':
             model = ForecastModel(input_channels=n_features,
@@ -119,7 +124,7 @@ def main():
             model_path = os.path.join('results', 'forecast_model.pth')
             model, _, _ = train_dl_model(
                 model, train_loader, val_loader, device,
-                num_epochs=500, early_stop_patience=30, verbose=False,
+                verbose=False,
                 model_path=model_path)
             preds, targets = predict_dl(model, test_loader, device)
 

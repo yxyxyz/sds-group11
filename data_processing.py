@@ -17,8 +17,8 @@ def load_and_preprocess(data_path):
 
     price_mean = df['Price_BE'].mean()
     price_std = df['Price_BE'].std()
-    upper_limit = price_mean + 5 * price_std
-    lower_limit = price_mean - 5 * price_std
+    upper_limit = price_mean + 3 * price_std
+    lower_limit = price_mean - 3 * price_std
     df.loc[df['Price_BE'] > upper_limit, 'Price_BE'] = upper_limit
     df.loc[df['Price_BE'] < lower_limit, 'Price_BE'] = lower_limit
 
@@ -27,22 +27,22 @@ def load_and_preprocess(data_path):
         df[col] = df[col].fillna(df[col].shift(24))
         df[col] = df[col].bfill().ffill()
 
-    price_lags = [24, 48, 72, 168]
+    price_lags = [24, 48, 72]
     for lag in price_lags:
         df[f'Price_BE_lag_{lag}'] = df['Price_BE'].shift(lag)
         feature_cols.append(f'Price_BE_lag_{lag}')
 
-    other_lags = [24, 168]
+    other_lags = [24, 72]
     for var in ['Gen_BE', 'Load_BE']:
         for lag in other_lags:
             df[f'{var}_lag_{lag}'] = df[var].shift(lag)
             feature_cols.append(f'{var}_lag_{lag}')
 
-    df['day_of_week_sin'] = np.sin(2 * np.pi * df.index.dayofweek / 7)
-    df['day_of_week_cos'] = np.cos(2 * np.pi * df.index.dayofweek / 7)
+    # df['day_of_week_sin'] = np.sin(2 * np.pi * df.index.dayofweek / 7)
+    # df['day_of_week_cos'] = np.cos(2 * np.pi * df.index.dayofweek / 7)
 
-    time_features = ['day_of_week_sin', 'day_of_week_cos']
-    feature_cols.extend(time_features)
+    # time_features = ['day_of_week_sin', 'day_of_week_cos']
+    # feature_cols.extend(time_features)
 
     df = df.dropna()
     df = df.reset_index(drop=True)

@@ -24,14 +24,16 @@ Range: 2021-01-01 to 2026-02-25 (45,144 hourly samples).
 ## Project Structure
 
 ```
-├── Full_Dataset.csv         # Input dataset (not tracked in git)
-├── main.py                  # Entry point — runs all models and saves results
-├── data_processing.py       # Data loading, cleaning, feature engineering
-├── model.py                 # Neural network model architectures
-├── train.py                 # Training loop, evaluation, and metrics
-├── sds.ipynb                # Exploratory notebook (dual-path CNN-LSTM variant)
-├── requirements_conda.yml   # Conda environment specification
-├── results/                 # Model comparison metrics and predictions
+├── Full_Dataset.csv           # Input dataset for pretraining
+├── Full_Dataset_Updated.csv   # Updated dataset for fine-tuning
+├── main.py                    # Entry point — pretrains models and saves results
+├── data_processing.py         # Data loading, cleaning, feature engineering
+├── model.py                   # Neural network model architectures
+├── train.py                   # Training loop, evaluation, and metrics
+├── draw.py                    # Visualization utilities
+├── sds.ipynb                  # Fine-tuning notebook (loads pretrained model)
+├── requirements.yml           # Conda environment specification
+├── results/                   # Model comparison metrics and predictions
 ├── Slides_SDS_ASSIGNMENT (2026).pdf  # Assignment reference
 └── README.md
 ```
@@ -46,24 +48,32 @@ The pipeline compares 5 architectures:
 | 2 | **SimpleMLP**          | Multi-layer perceptron on flattened sequences  |
 | 3 | **SimpleLSTM**         | 2-layer LSTM with Huber loss                   |
 | 4 | **CNN-BiLSTM-Attn**    | 1D CNN + Bidirectional LSTM + attention        |
-| 5 | **ForecastModel**   | Multi-scale STFT Imitation Network (SINCA)     |
+| 5 | **ForecastModel**   | Multi-scale STFT + F.interpolate upsampling + CNN + Channel Attention     |
 
 Metric: MSE, MAE, RMSE, wMAPE, sMAPE, R².
 
 ## Setup
 
 ```bash
-conda env create -f requirements_conda.yml
+conda env create -f requirements.yml
 conda activate sds
 ```
 
 ## Usage
+
+### Stage 1: Pretraining
+
+Train models on the original dataset. The best model checkpoint is saved to `results/forecast_model.pth`.
 
 ```bash
 python main.py
 ```
 
 Results are saved to `results/metrics.csv` (model comparison) and `results/predictions.csv` (forecasts vs actuals).
+
+### Stage 2: Fine-tuning
+
+Run `sds.ipynb` to load the pretrained model and fine-tune on `Full_Dataset_Updated.csv` with updated data.
 
 ## Key Preprocessing Steps
 

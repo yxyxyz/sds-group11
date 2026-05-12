@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 
 
 # --- STFT Imitation Network (single scale) ---
-class STFTImitNet(nn.Module):
+class SpectralInceptionNet(nn.Module):
     def __init__(self, input_length=72, window_size=24):
         super().__init__()
         self.window_size = window_size
@@ -42,7 +42,7 @@ class STFTImitNet(nn.Module):
 
 
 # --- Multi-Scale STFT with ConvTranspose2d upsampling (DETERMINISTIC) ---
-class MultiScaleSTFTImitNet(nn.Module):
+class MultiScaleSINE(nn.Module):
     def __init__(self, input_length=72, window_sizes=[6, 8, 12]):
         super().__init__()
         self.window_sizes = window_sizes
@@ -148,49 +148,38 @@ class ForecastModel(nn.Module):
         self.input_channels = input_channels
         self.history_len = history_len
 
-        self.multi_scale_stft = MultiScaleSTFTImitNet(
+        self.multi_scale_stft = MultiScaleSINE(
             input_length=history_len, window_sizes=window_sizes
         )
 
-        # Determine target spatial dims (maximum across all scales)
-        target_H = max(ws // 2 + 1 for ws in window_sizes)
-        target_W = max(math.ceil(history_len / (ws // 2)) + 1 for ws in window_sizes)
-
-        # Per-scale ConvTranspose2d upsamplers (deterministic, no F.interpolate)
-        self.upsamplers = nn.ModuleList()
-        for ws in window_sizes:
-            H_in = ws // 2 + 1
-            W_in = math.ceil(history_len / (ws // 2)) + 1
-            K_h = target_H - H_in + 1
-            K_w = target_W - W_in + 1
-            up = nn.ConvTranspose2d(
-                in_channels=input_channels,
-                out_channels=input_channels,
-                kernel_size=(K_h, K_w),
-                stride=1,
-                padding=0,
-                bias=False
-            )
-            self.upsamplers.append(up)
+        self.target_H = max(ws // 2 + 1 for ws in window_sizes)
+        self.target_W = max(math.ceil(history_len / (ws // 2)) + 1 for ws in window_sizes)
 
         total_channels = input_channels * len(window_sizes)
 
         self.cnn = nn.Sequential(
             ResidualConv2d(total_channels, 32, kernel_size=3, dilation=2, padding=2),
+            # nn.Conv2d(total_channels, 32, kernel_size=3, dilation=2, padding=2),
+            #nn.BatchNorm2d(32),
+            #nn.ReLU(),
             ChannelAttention(32),
-            SpatialAttention(),
+            # SpatialAttention(),
             nn.MaxPool2d((2, 1)),
 
             ResidualConv2d(32, 64, kernel_size=3, padding=1),
+            #nn.Conv2d(32, 64, kernel_size=(3, 3), dilation=1, padding=(1, 1)),
+            # nn.BatchNorm2d(64),
+            # nn.ReLU(),
             ChannelAttention(64),
-            SpatialAttention(),
+            # SpatialAttention(),
             nn.MaxPool2d((2, 2))
         )
 
         self.classifier = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             nn.Flatten(),
-            nn.Linear(64, forecast_len)
+            nn.Linear(64, 128),
+            nn.Linear(128, forecast_len)
         )
 
     def forward(self, x):
@@ -198,8 +187,9 @@ class ForecastModel(nn.Module):
         specs = self.multi_scale_stft(x)
 
         upsampled = []
-        for i, spec in enumerate(specs):
-            upsampled.append(self.upsamplers[i](spec))
+        for spec in specs:
+            upsampled.append(F.interpolate(spec, size=(self.target_H, self.target_W),
+                                           mode='nearest'))
         combined = torch.cat(upsampled, dim=1)  # (B, C*len(ws), H_target, W_target)
 
         features = self.cnn(combined)

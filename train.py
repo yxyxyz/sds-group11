@@ -14,6 +14,7 @@ def train_epoch(model, loader, criterion, optimizer, device):
         pred = model(xb)
         loss = criterion(pred, yb)
         loss.backward()
+        # nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
         total_loss += loss.item() * xb.size(0)
     return total_loss / len(loader.dataset)
@@ -34,7 +35,7 @@ def validate(model, loader, criterion, device):
 def train_dl_model(model, train_loader, val_loader, device,
                    lr=1e-3, weight_decay=1e-5, num_epochs=1000,
                    early_stop_patience=50, model_path=None, verbose=True):
-    criterion = nn.HuberLoss(delta=1.0)
+    criterion = nn.HuberLoss(delta=5.0)
     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     best_val_loss = float('inf')

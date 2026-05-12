@@ -10,63 +10,44 @@ from data_processing import load_and_preprocess, split_data, create_sequences, c
 from model import ForecastModel
 from train import predict_dl
 
+import os
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
 
 def plot_features(data_path='Full_Dataset.csv', save_dir='results'):
-    df, feature_cols = load_and_preprocess(data_path)
+    df, feature_cols = load_and_preprocess(data_path)  # 假设已有加载函数
 
     n = len(df)
     t = np.arange(n)
 
-    rows = 5
-    fig, axes = plt.subplots(rows, 1, figsize=(14, 3 * rows), sharex=True)
+    # 只保留两行子图
+    fig, axes = plt.subplots(2, 1, figsize=(12, 5), sharex=True,
+                             gridspec_kw={'height_ratios': [1, 1]})
 
-    # Row 1: Price_BE
+    # 第一图：Price_BE
     ax = axes[0]
-    ax.plot(t, df['Price_BE'], linewidth=0.4, color='black')
-    ax.set_ylabel('Price (EUR/MWh)')
-    ax.set_title('Price_BE')
+    ax.plot(t, df['Price_BE'], linewidth=0.8, color='#1f77b4', label='Price_BE')  # 柔和蓝色
+    ax.set_ylabel('Price (EUR/MWh)', fontsize=10)
+    ax.set_title('Day-Ahead Electricity Belpex Price (EUR/MWh)', fontsize=11, fontweight='medium')
+    ax.grid(True, linestyle='--', alpha=0.4)
+    ax.legend(loc='upper right', fontsize=8)
 
-    # Row 2: Gen_BE and Load_BE
+    # 第二图：Gen_BE 和 Load_BE
     ax = axes[1]
-    ax.plot(t, df['Gen_BE'], linewidth=0.4, label='Gen_BE', color='darkgreen')
-    ax.plot(t, df['Load_BE'], linewidth=0.4, label='Load_BE', color='darkorange')
-    ax.set_ylabel('MW')
-    ax.legend(fontsize=7, loc='upper right')
-    ax.set_title('Gen_BE and Load_BE')
+    ax.plot(t, df['Gen_BE'], linewidth=0.8, color='#2ca02c', label='Gen_BE')  # 青绿色
+    ax.plot(t, df['Load_BE'], linewidth=0.8, color='#ff7f0e', label='Load_BE')  # 橙色
+    ax.set_ylabel('Power (MW)', fontsize=10)
+    ax.set_xlabel('Time index (hours)', fontsize=10)
+    ax.set_title('Belgium Renewable Generation and Load (MW)', fontsize=11, fontweight='medium')
+    ax.grid(True, linestyle='--', alpha=0.4)
+    ax.legend(loc='upper right', fontsize=8)
 
-    # Row 3: Price lag features
-    ax = axes[2]
-    price_lag_cols = [c for c in df.columns if 'Price_BE_lag' in c]
-    for col in price_lag_cols:
-        ax.plot(t, df[col], linewidth=0.3, label=col, alpha=0.7)
-    ax.set_ylabel('Price lag')
-    ax.set_title('Price_BE Lags')
-    ax.legend(fontsize=7, loc='upper right', ncol=2)
-
-    # Row 4: Gen/Load lag features
-    ax = axes[3]
-    for var in ['Gen_BE', 'Load_BE']:
-        lag_cols = [c for c in df.columns if f'{var}_lag' in c]
-        for col in lag_cols:
-            ax.plot(t, df[col], linewidth=0.3, label=col, alpha=0.7)
-    ax.set_ylabel('MW lag')
-    ax.set_title('Gen_BE and Load_BE Lags')
-    ax.legend(fontsize=7, loc='upper right', ncol=2)
-
-    # Row 5: day-of-week sinusoidal features
-    ax = axes[4]
-    zoom = 168 * 2
-    ax.plot(t[:zoom], df['day_of_week_sin'].iloc[:zoom], linewidth=0.8, label='day_of_week_sin')
-    ax.plot(t[:zoom], df['day_of_week_cos'].iloc[:zoom], linewidth=0.8, label='day_of_week_cos')
-    ax.set_ylabel('Value')
-    ax.set_title('Day-of-Week Features (first 2 weeks)')
-    ax.set_xlabel('Time index (hours)')
-    ax.legend(fontsize=8, loc='upper right')
-
-    fig.tight_layout()
+    fig.tight_layout(pad=1.5)
     os.makedirs(save_dir, exist_ok=True)
     path = os.path.join(save_dir, 'features.pdf')
-    fig.savefig(path, dpi=150, bbox_inches='tight')
+    fig.savefig(path, dpi=300, bbox_inches='tight')
     plt.close(fig)
     print(f"Features plot saved to {path}")
 
@@ -78,14 +59,19 @@ def plot_forecast(save_dir='results'):
     pred = df['pred'].values
     horizon = np.arange(len(true))
 
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(horizon, true, 'o-', markersize=4, linewidth=1.2, label='True', color='black')
-    ax.plot(horizon, pred, 's--', markersize=4, linewidth=1.2, label='Predicted', color='tab:red')
-    ax.set_xlabel('Forecast horizon (hours)')
-    ax.set_ylabel('Price (EUR/MWh)')
-    ax.set_title('72-Hour Forecast: True vs Predicted')
-    ax.legend()
-    ax.grid(True, alpha=0.3)
+    # 增大图形尺寸：宽度 12 英寸，高度 6 英寸
+    fig, ax = plt.subplots(figsize=(6, 4))
+
+    # 真实值：蓝色实线 + 圆点
+    ax.plot(horizon, true, 'o-', markersize=5, linewidth=1.5, color='blue', label='True')
+    # 预测值：红色虚线 + 方块
+    ax.plot(horizon, pred, 's--', markersize=5, linewidth=1.5, color='red', label='Predicted')
+
+    ax.set_xlabel('Forecast horizon (hours)', fontsize=12)
+    ax.set_ylabel('Price (EUR/MWh)', fontsize=12)
+    ax.set_title('72-Hour Forecast: True vs Predicted', fontsize=14)
+    ax.legend(fontsize=11, loc='best')
+    ax.grid(True, linestyle='--', alpha=0.3)
 
     fig.tight_layout()
     path = os.path.join(save_dir, 'forecast.pdf')
@@ -127,7 +113,7 @@ def plot_test_results(save_dir='results', data_path='Full_Dataset.csv'):
     ss_tot = np.sum((true - true.mean()) ** 2)
     r2 = 1 - ss_res / ss_tot
 
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(4, 4))
     ax.scatter(true, pred, s=2, alpha=0.4, color='tab:blue', edgecolors='none')
     lim_min = min(true.min(), pred.min())
     lim_max = max(true.max(), pred.max())
@@ -137,11 +123,11 @@ def plot_test_results(save_dir='results', data_path='Full_Dataset.csv'):
     ax.set_title('ForecastModel: True vs Predicted on Test Set')
     ax.grid(True, alpha=0.3)
     ax.text(0.05, 0.95, f'R² = {r2:.4f}', transform=ax.transAxes,
-            fontsize=11, va='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+            fontsize=11, va='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
     fig.tight_layout()
-    path = os.path.join(save_dir, 'test_results.pdf')
-    fig.savefig(path, dpi=150, bbox_inches='tight')
+    path = os.path.join(save_dir, 'test_results.png')
+    fig.savefig(path, dpi=300, bbox_inches='tight')
     plt.close(fig)
     print(f"Test results plot saved to {path}")
 
