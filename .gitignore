@@ -24,5 +24,3 @@ env/
 *.swp
 *.swo
 
-# PyTorch
-*.pth

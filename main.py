@@ -56,7 +56,7 @@ def main():
     batch_size = 32
     split_ratio = (7, 2, 1)
 
-    os.makedirs('results', exist_ok=True)
+    os.makedirs('finetune_results', exist_ok=True)
 
     data = split_data(df, feature_cols, split_ratio=split_ratio, normalize=False)
     X_train_seq, y_train_seq = create_sequences(
@@ -73,10 +73,10 @@ def main():
     test_loader = create_dataloaders(X_test_seq, y_test_seq, batch_size, shuffle=False)
 
     models_to_run = [
-        # ('LEAR', None),
-        # ('SimpleMLP', None),
-        # ('SimpleLSTM', None),
-        # ('CNN-BiLSTM-Attn', None),
+        ('LEAR', None),
+        ('SimpleMLP', None),
+        ('SimpleLSTM', None),
+        ('CNN-BiLSTM-Attn', None),
         ('ForecastModel', 'predictions.csv'),
     ]
     results = []

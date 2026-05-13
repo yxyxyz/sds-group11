@@ -14,7 +14,7 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+from main import set_seed
 
 def plot_features(data_path='Full_Dataset.csv', save_dir='pretrain_results'):
     df, feature_cols = load_and_preprocess(data_path)  # 假设已有加载函数
@@ -92,12 +92,12 @@ def plot_test_results(save_dir='pretrain_results', data_path='Full_Dataset.csv')
 
     df, feature_cols = load_and_preprocess(data_path)
     n_features = len([c for c in feature_cols if c not in ('Price_BE', 'Price_CH')])
-
+    set_seed(42)
     data = split_data(df, feature_cols, split_ratio=(7, 2, 1), normalize=False)
     X_test_seq, y_test_seq = create_sequences(
         data['X_test'], data['y_test'], history_len, forecast_len)
     test_loader = create_dataloaders(X_test_seq, y_test_seq, batch_size=32, shuffle=False)
-
+    set_seed(42)
     model = ForecastModel(input_channels=n_features, history_len=history_len,
                           forecast_len=forecast_len, window_sizes=[6, 8, 12]).to(device)
     ckpt = torch.load(os.path.join(save_dir, 'forecast_model.pth'), map_location=device, weights_only=True)
