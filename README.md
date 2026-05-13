@@ -33,7 +33,8 @@ Range: 2021-01-01 to 2026-02-25 (45,144 hourly samples).
 ├── draw.py                    # Visualization utilities
 ├── sds.ipynb                  # Fine-tuning notebook (loads pretrained model)
 ├── requirements.yml           # Conda environment specification
-├── results/                   # Model comparison metrics and predictions
+├── pretrain_results/          # Model comparison metrics and predictions
+├── finetune_results/          # Final model and predictions
 ├── Slides_SDS_ASSIGNMENT (2026).pdf  # Assignment reference
 └── README.md
 ```
