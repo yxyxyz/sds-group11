@@ -16,7 +16,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def plot_features(data_path='Full_Dataset.csv', save_dir='results'):
+def plot_features(data_path='Full_Dataset.csv', save_dir='pretrain_results'):
     df, feature_cols = load_and_preprocess(data_path)  # 假设已有加载函数
 
     n = len(df)
@@ -52,7 +52,7 @@ def plot_features(data_path='Full_Dataset.csv', save_dir='results'):
     print(f"Features plot saved to {path}")
 
 
-def plot_forecast(save_dir='results'):
+def plot_forecast(save_dir='pretrain_results'):
     csv_path = os.path.join(save_dir, 'predictions.csv')
     df = pd.read_csv(csv_path)
     true = df['true'].values
@@ -80,7 +80,7 @@ def plot_forecast(save_dir='results'):
     print(f"Forecast plot saved to {path}")
 
 
-def plot_test_results(save_dir='results', data_path='Full_Dataset.csv'):
+def plot_test_results(save_dir='pretrain_results', data_path='Full_Dataset.csv'):
     device = torch.device('cpu')
     if torch.cuda.is_available():
         device = torch.device('cuda')

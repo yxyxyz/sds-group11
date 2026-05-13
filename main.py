@@ -121,7 +121,7 @@ def main():
                                      history_len=history_len,
                                      forecast_len=forecast_len,
                                      window_sizes=[6, 8, 12]).to(device)
-            model_path = os.path.join('results', 'forecast_model.pth')
+            model_path = os.path.join('pretrain_results', 'forecast_model.pth')
             model, _, _ = train_dl_model(
                 model, train_loader, val_loader, device,
                 verbose=False,
@@ -142,7 +142,7 @@ def main():
         if csv_out is not None:
             final_true = y_test_seq[-1]
             final_pred = preds[-1]
-            np.savetxt(os.path.join('results', csv_out),
+            np.savetxt(os.path.join('pretrain_results', csv_out),
                        np.column_stack([final_true, final_pred]),
                        delimiter=',', fmt='%.4f',
                        header='true,pred', comments='')
@@ -150,7 +150,7 @@ def main():
     df_results = pd.DataFrame(results)[
         ['Model', 'MSE', 'MAE', 'RMSE', 'wMAPE', 'sMAPE', 'R2', 'Time_s']
     ]
-    csv_path = os.path.join('results', 'metrics.csv')
+    csv_path = os.path.join('pretrain_results', 'metrics.csv')
     df_results.to_csv(csv_path, index=False)
 
     print("\n" + "=" * 60)
