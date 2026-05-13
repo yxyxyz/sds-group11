@@ -64,17 +64,18 @@ conda activate sds
 
 ### Stage 1: Pretraining
 
-Train models on the original dataset. The best model checkpoint is saved to `results/forecast_model.pth`.
+Train models on the original dataset. The best model checkpoint is saved to `pretrain_results/forecast_model.pth`.
 
 ```bash
 python main.py
 ```
 
-Results are saved to `results/metrics.csv` (model comparison) and `results/predictions.csv` (forecasts vs actuals).
+Results are saved to `pretrain_results/metrics.csv` (model comparison).
 
 ### Stage 2: Fine-tuning
 
-Run `sds.ipynb` to load the pretrained model and fine-tune on `Full_Dataset_Updated.csv` with updated data.
+Run `sds.ipynb` to load the pretrained model and fine-tune on `Full_Dataset_Updated.csv` with updated data. The best model is saved to `finetune_results/finetun_forecast_model.pth`. Results are save to `finetune_results/predictions.csv`.
+
 
 ## Key Preprocessing Steps
 
